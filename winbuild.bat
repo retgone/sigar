@@ -1,53 +1,114 @@
-@rem  $%BEGINLICENSE%$
-@rem  $%ENDLICENSE%$
-@echo "Run this from a shell started with the Visual Studio Build environment set!"
+@echo off
 
-@IF DEFINED GENERATOR (GOTO GENERAL_CONF)
-@rem Sane default is VS2005, but maybe not what we really want...
-@SET GENERATOR="Visual Studio 8 2005"
-@GOTO GENERAL_CONF
+set TOOLKIT=%1
+set TARGET=%2
+set CONFIG=%3
 
-:GENERAL_CONF
+call:toolkitsetup
+call:main
+goto:eof
 
-@echo Using %GENERATOR%
+REM ===== TOOLKIT SETUP =====
 
-@rem MSVC 8 2005 doesn't seem to have devenv.com
-@SET VS_CMD="%VS90COMNTOOLS%\..\IDE\VCExpress.exe"
+:toolkitsetup
 
-@rem clear the cache if neccesary to let cmake recheck everything
-@rem del CMakeCache.txt
+if X%TOOLKIT%==Xvs2010 goto vs2010
+if X%TOOLKIT%==Xvs2005 goto vs2005
 
-:CMAKE
-@rem make sure that /D NDEBUG isn't set as it disables all the assert()ions in the testcase
+echo ** error ** invalid toolkit!
+call:error
+goto:eof
+
+:vs2010
+
+set GENERATOR="Visual Studio 10"
+set BUILD="%VS100COMNTOOLS%\..\IDE\devenv.exe"
+goto:eof
+
+:vs2005
+
+REM XXX completely untested: based upon the old, broken winbuild.bat
+set GENERATOR="Visual Studio 8 2005"
+set BUILD="%VS90COMNTOOLS%\..\IDE\VCExpress.exe"
+goto:eof
+
+REM ===== main =====
+
+:main
+
+if X%TARGET%==Xbuild goto build
+if X%TARGET%==Xclean goto clean
+if X%TARGET%==Xtest  goto test
+if X%TARGET%==Xdist  goto dist
+
+echo **error ** invalid target!
+call:error
+goto:eof
+
+REM ===== clean =====
+
+:clean
+
+@echo on
+%BUILD% sigar.sln /Clean
+@echo off
+goto:eof
+
+REM ===== build =====
+
+:build
+
+if X%CONFIG%==X goto error
+
+@echo on
 cmake -G %GENERATOR% -DBUILD_NUMBER=%BUILD_NUMBER% -DCMAKE_INSTALL_PREFIX=%INST_PREFIX% -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_FLAGS_RELWITHDEBINFO:STRING="/MD /Zi /O2 /Ob1" .
+%BUILD% sigar.sln /Build %CONFIG%
+@echo off
+goto:eof
 
-@IF NOT %GENERATOR%=="NMake Makefiles" (GOTO VS08BUILD)
-nmake
-IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
-cp build-src/sigar.dll build-tests/
-nmake test
-IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL% 
-nmake install
-IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL% 
+REM ===== test =====
 
-@GOTO CLEANUP
+:test
 
-:VS08BUILD
-%VS_CMD% mysql-proxy.sln /Clean
-%VS_CMD% mysql-proxy.sln /Build Release
-%VS_CMD% mysql-proxy.sln /Build Release /project RUN_TESTS
-%VS_CMD% mysql-proxy.sln /Build Release /project PACKAGE
-%VS_CMD% mysql-proxy.sln /Build Release /project INSTALL
+if X%CONFIG%==X goto error
 
-@GOTO CLEANUP
+call:build
+@echo on
+%BUILD% sigar.sln /Build %CONFIG% /Project RUN_TESTS
+@echo off
+goto:eof
 
-@rem if you use VS8 to build then VS80COMNTOOLS should be set
-@rem "%VS80COMNTOOLS%\..\IDE\devenv.com" mysql-proxy.sln /Clean
-@rem "%VS80COMNTOOLS%\..\IDE\devenv.com" mysql-proxy.sln /Build
-@rem "%VS80COMNTOOLS%\..\IDE\devenv.com" mysql-proxy.sln /Build Debug /project RUN_TESTS
-@rem "%VS80COMNTOOLS%\..\IDE\devenv.com" mysql-proxy.sln /Build Debug /project PACKAGE
-@rem "%VS80COMNTOOLS%\..\IDE\devenv.com" mysql-proxy.sln /Build Debug /project INSTALL
+REM ===== dist =====
 
-:CLEANUP
+:dist
 
-:END
+if X%CONFIG%==X goto error
+
+call:build
+@echo on
+%BUILD% sigar.sln /Build %CONFIG% /Project PACKAGE
+@echo off
+goto:eof
+
+:error
+
+echo.
+echo usage: %0 (toolkit) (target) (config)
+echo e.g. %0 vs2010 build Release
+echo.
+echo Targets:
+echo    build   --  Compile and link SIGAR
+echo    clean   --  Clean up build artifacts
+echo    test    --  Run tests
+echo    dist    --  Build SIGAR installer using CPack/NSIS
+echo
+echo Toolkits:
+echo    vs2010  --  Visual Studio 2010
+echo    vs2005  --  Visual Studio 2005
+echo.
+echo Configurations
+echo    Debug
+echo    Release
+echo.
+
+goto:eof
