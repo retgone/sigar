@@ -1,5 +1,5 @@
 dnl ... hmm ... we have to duplicate the data below again
-AC_INIT(libsigar, 1.6.3)
+AC_INIT(libsigar, 1.6.5)
 AC_CONFIG_SRCDIR(src/sigar.c)
 dnl AC_CONFIG_HEADERS(src/config.h)
 AM_INIT_AUTOMAKE([1.9 foreign])
@@ -8,7 +8,7 @@ AC_CANONICAL_HOST
 dnl for sigar_version_autoconf.c.in
 VERSION_MAJOR=1
 VERSION_MINOR=6
-VERSION_MAINT=3
+VERSION_MAINT=5
 VERSION_BUILD=0
 
 AC_SUBST(VERSION_MAJOR)
