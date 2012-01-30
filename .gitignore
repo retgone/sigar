@@ -27,8 +27,6 @@ debian/libsigar1-dev/
 debian/libsigar-java-doc/
 debian/libsigar-java/
 debian/files
-config.sub*
-config.guess*
 bindings/java/${dist}
 bindings/python/build
 /tags
