@@ -1362,7 +1362,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
-  --enable-shared[=PKGS]  build shared libraries [default=yes]
+  --enable-shared[=PKGS]  build shared libraries [default=no]
   --enable-static[=PKGS]  build static libraries [default=yes]
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
@@ -6997,16 +6997,7 @@ done
 
 
 # Set options
-
-
-
-        enable_dlopen=no
-
-
-  enable_win32_dll=no
-
-
-            # Check whether --enable-shared was given.
+# Check whether --enable-shared was given.
 if test "${enable_shared+set}" = set; then
   enableval=$enable_shared; p=${PACKAGE-default}
     case $enableval in
@@ -7026,7 +7017,7 @@ if test "${enable_shared+set}" = set; then
       ;;
     esac
 else
-  enable_shared=yes
+  enable_shared=no
 fi
 
 
@@ -7035,9 +7026,7 @@ fi
 
 
 
-
-
-  # Check whether --enable-static was given.
+# Check whether --enable-static was given.
 if test "${enable_static+set}" = set; then
   enableval=$enable_static; p=${PACKAGE-default}
     case $enableval in
@@ -7064,6 +7053,15 @@ fi
 
 
 
+
+
+
+
+
+        enable_dlopen=no
+
+
+  enable_win32_dll=no
 
 
 
@@ -7438,10 +7436,6 @@ _lt_linker_boilerplate=`cat conftest.err`
 $RM -r conftest*
 
 
-## CAVEAT EMPTOR:
-## There is no encapsulation within the following macros, do not change
-## the running order or otherwise move them around unless you know exactly
-## what you are doing...
 if test -n "$compiler"; then
 
 lt_prog_compiler_no_builtin_flag=
