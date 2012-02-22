@@ -11353,7 +11353,6 @@ cat >>confdefs.h <<\_ACEOF
 #define SIGAR_TEST_OS_DARWIN 1
 _ACEOF
 
-     SIGAR_INCLUDES="-I /Developer/Headers/FlatCarbon/"
      SIGAR_LIBS="-framework IOKit -framework CoreServices"
      ;;
      *netbsd*)
