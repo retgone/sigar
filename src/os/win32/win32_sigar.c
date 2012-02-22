@@ -2760,9 +2760,14 @@ sigar_net_interface_list_get(sigar_t *sigar,
         else if ((ifr->dwType == MIB_IF_TYPE_ETHERNET) ||
                  (ifr->dwType == IF_TYPE_IEEE80211))
         {
-            if (!sigar->netif_name_short &&
-                (strstr(ifr->bDescr, "Scheduler") == NULL) &&
+            /* Ignore packet schedulers & filters */
+            if ((strstr(ifr->bDescr, "Scheduler") == NULL) ||
                 (strstr(ifr->bDescr, "Filter") == NULL))
+            {
+                continue;
+            }
+
+            if (!sigar->netif_name_short)
             {
                 status = sigar_net_interface_name_get(sigar, ifr, address_list, name);
             }
