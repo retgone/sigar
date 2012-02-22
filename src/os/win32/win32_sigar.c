@@ -2777,7 +2777,7 @@ sigar_net_interface_list_get(sigar_t *sigar,
                     sprintf(name, "eth%d", eth++);
                 }
                 else {
-                    snprintf(name, ifr->dwDescrLen, "%s", ifr->bDescr);
+                    snprintf(name, sizeof(name), "%s", ifr->bDescr);
                 }
             }
         }
