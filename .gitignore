@@ -28,3 +28,14 @@ debian/files
 bindings/java/${dist}
 bindings/python/build
 /tags
+*.vcxproj
+CMakeFiles
+CMakeCache.txt
+*.cmake
+*.sln
+*.vcxproj.filters
+*.vcxproj.user
+/build-src
+/build-tests
+DartConfiguration.tcl
+/Win32
