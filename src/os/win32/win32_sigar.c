@@ -2761,8 +2761,8 @@ sigar_net_interface_list_get(sigar_t *sigar,
                  (ifr->dwType == IF_TYPE_IEEE80211))
         {
             /* Ignore packet schedulers & filters */
-            if ((strstr(ifr->bDescr, "Scheduler") == NULL) ||
-                (strstr(ifr->bDescr, "Filter") == NULL))
+            if ((strstr(ifr->bDescr, "Scheduler") != NULL) ||
+                (strstr(ifr->bDescr, "Filter") != NULL))
             {
                 continue;
             }
