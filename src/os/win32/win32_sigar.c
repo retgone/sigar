@@ -78,9 +78,12 @@ typedef enum {
 } perf_proc_offsets_t;
 
 typedef enum {
-    PERF_IX_DISK_TIME,
-    PERF_IX_DISK_READ_TIME,
-    PERF_IX_DISK_WRITE_TIME,
+    PERF_IX_DISK_TIME_NUMERATOR,
+    PERF_IX_DISK_TIME_DENOMINATOR,
+    PERF_IX_DISK_READ_TIME_NUMERATOR,
+    PERF_IX_DISK_READ_TIME_DENOMINATOR,
+    PERF_IX_DISK_WRITE_TIME_NUMERATOR,
+    PERF_IX_DISK_WRITE_TIME_DENOMINATOR,
     PERF_IX_DISK_READ,
     PERF_IX_DISK_WRITE,
     PERF_IX_DISK_READ_BYTES,
@@ -1295,7 +1298,7 @@ SIGAR_DECLARE(int) sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
 }
 
 #define FILETIME2MSEC(ft) \
-    NS100_2MSEC(((ft.dwHighDateTime << 32) | ft.dwLowDateTime))
+    NS100_2MSEC(((((sigar_uint64_t)ft.dwHighDateTime) << 32) | ft.dwLowDateTime))
 
 sigar_int64_t sigar_time_now_millis(void)
 {
@@ -1921,6 +1924,9 @@ static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
     DWORD i, found=0;
+    BOOL have_time_numerator = FALSE;
+    BOOL have_read_time_numerator = FALSE;
+    BOOL have_write_time_numerator = FALSE;
 
     if (!object) {
         return NULL;
@@ -1934,15 +1940,33 @@ static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
 
         switch (counter->CounterNameTitleIndex) {
           case PERF_TITLE_DISK_TIME:
-            perf_offsets[PERF_IX_DISK_TIME] = offset;
+            if (!have_time_numerator) {
+                perf_offsets[PERF_IX_DISK_TIME_NUMERATOR] = offset;
+                have_time_numerator = TRUE;
+            }
+            else {
+                perf_offsets[PERF_IX_DISK_TIME_DENOMINATOR] = offset;
+            }
             found = 1;
             break;
           case PERF_TITLE_DISK_READ_TIME:
-            perf_offsets[PERF_IX_DISK_READ_TIME] = offset;
+            if (!have_read_time_numerator) {
+                perf_offsets[PERF_IX_DISK_READ_TIME_NUMERATOR] = offset;
+                have_read_time_numerator = TRUE;
+            }
+            else {
+                perf_offsets[PERF_IX_DISK_READ_TIME_DENOMINATOR] = offset;
+            }
             found = 1;
             break;
           case PERF_TITLE_DISK_WRITE_TIME:
-            perf_offsets[PERF_IX_DISK_WRITE_TIME] = offset;
+            if (!have_write_time_numerator) {
+                perf_offsets[PERF_IX_DISK_WRITE_TIME_NUMERATOR] = offset;
+                have_write_time_numerator = TRUE;
+            }
+            else {
+                perf_offsets[PERF_IX_DISK_WRITE_TIME_DENOMINATOR] = offset;
+            }
             found = 1;
             break;
           case PERF_TITLE_DISK_READ:
@@ -1990,6 +2014,7 @@ SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
     DWORD perf_offsets[PERF_IX_DISK_MAX];
+    /* LARGE_INTEGER freq = object->PerfFreq; */
 
     SIGAR_DISK_STATS_INIT(disk);
 
@@ -2027,9 +2052,9 @@ SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
         }
 
         if (strnEQ(drive, dirname, 2)) {
-            disk->time   = PERF_VAL(PERF_IX_DISK_TIME);
-            disk->rtime  = PERF_VAL(PERF_IX_DISK_READ_TIME);
-            disk->wtime  = PERF_VAL(PERF_IX_DISK_WRITE_TIME);
+            disk->time   = NS100_2MSEC(PERF_VAL(PERF_IX_DISK_TIME_NUMERATOR));
+            disk->rtime  = NS100_2MSEC(PERF_VAL(PERF_IX_DISK_READ_TIME_NUMERATOR));
+            disk->wtime  = NS100_2MSEC(PERF_VAL(PERF_IX_DISK_WRITE_TIME_NUMERATOR));
             disk->reads  = PERF_VAL(PERF_IX_DISK_READ);
             disk->writes = PERF_VAL(PERF_IX_DISK_WRITE);
             disk->read_bytes  = PERF_VAL(PERF_IX_DISK_READ_BYTES);
