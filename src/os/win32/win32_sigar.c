@@ -1186,7 +1186,12 @@ int sigar_os_proc_list_get(sigar_t *sigar,
 
 static HANDLE open_process(sigar_pid_t pid)
 {
-    return OpenProcess(PROCESS_DAC, 0, (DWORD)pid);
+    HANDLE handle = OpenProcess(PROCESS_DAC, 0, (DWORD)pid);
+    if (handle == NULL) {
+        /* Probably a Protected Process ... */
+        handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, (DWORD)pid);
+    }
+    return handle;
 }
 
 /*
