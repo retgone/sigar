@@ -135,7 +135,7 @@ typedef struct _WTS_SESSION_INFO {
 typedef struct _WTS_PROCESS_INFO {
     DWORD SessionId;
     DWORD ProcessId;
-    LPSTR pProcessName;
+    LPTSTR pProcessName;
     PSID pUserSid;
 } WTS_PROCESS_INFO, *PWTS_PROCESS_INFO;
 
@@ -375,7 +375,7 @@ typedef void (CALLBACK *wtsapi_free_mem)(PVOID);
 typedef BOOL (CALLBACK *wtsapi_query_session)(HANDLE,
                                               DWORD,
                                               WTS_INFO_CLASS,
-                                              LPSTR *, DWORD *);
+                                              LPTSTR *, DWORD *);
 /* iphlpapi.dll */
 
 typedef DWORD (CALLBACK *iphlpapi_get_ipforward_table)(PMIB_IPFORWARDTABLE,
@@ -429,7 +429,7 @@ typedef ULONG (CALLBACK *iphlpapi_get_adapters_addrs)(ULONG,
                                                       PULONG);
 
 /* advapi32.dll */
-typedef BOOL (CALLBACK *advapi_convert_string_sid)(LPCSTR,
+typedef BOOL (CALLBACK *advapi_convert_string_sid)(LPCTSTR,
                                                    PSID *);
 
 typedef BOOL (CALLBACK *advapi_query_service_status)(SC_HANDLE,
