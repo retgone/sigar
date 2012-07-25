@@ -25,6 +25,7 @@
 #include <shellapi.h>
 #include <tchar.h>
 #include <strsafe.h>
+#include <Psapi.h>
 #ifndef MSVC
 #include <iphlpapi.h>
 #endif
@@ -1551,6 +1552,8 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
          i<object->NumInstances;
          i++, inst = PdhNextInstance(inst))
     {
+        HANDLE hprocess;
+        PROCESS_MEMORY_COUNTERS_EX mem_counters;
         PERF_COUNTER_BLOCK *counter_block = PdhGetCounterBlock(inst);
         sigar_pid_t this_pid = PERF_VAL(PERF_IX_PID);
 
@@ -1562,13 +1565,22 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
         SIGAR_W2A(PdhInstanceName(inst),
                   pinfo->name, sizeof(pinfo->name));
 
-        pinfo->size     = PERF_VAL(PERF_IX_MEM_VSIZE);
-        pinfo->resident = PERF_VAL(PERF_IX_MEM_SIZE);
+        if ((hprocess = open_process(this_pid)) == NULL) {
+            return GetLastError();
+        }
+        if (!GetProcessMemoryInfo(hprocess, (PROCESS_MEMORY_COUNTERS *)&mem_counters, sizeof(mem_counters))) {
+            CloseHandle(hprocess);
+            return GetLastError();
+        }
+        CloseHandle(hprocess);
+
+        pinfo->size     = mem_counters.PrivateUsage;
+        pinfo->resident = mem_counters.WorkingSetSize;
         pinfo->ppid     = PERF_VAL(PERF_IX_PPID);
         pinfo->priority = PERF_VAL(PERF_IX_PRIORITY);
         pinfo->handles  = PERF_VAL(PERF_IX_HANDLE_CNT);
         pinfo->threads  = PERF_VAL(PERF_IX_THREAD_CNT);
-        pinfo->page_faults = PERF_VAL(PERF_IX_PAGE_FAULTS);
+        pinfo->page_faults = mem_counters.PageFaultCount;
 
         return SIGAR_OK;
     }
