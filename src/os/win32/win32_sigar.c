@@ -154,6 +154,8 @@ static DWORD perfbuf_init(sigar_t *sigar)
     if (!sigar->perfbuf) {
         sigar->perfbuf = malloc(PERFBUF_SIZE);
         sigar->perfbuf_size = PERFBUF_SIZE;
+        sigar_log (sigar, SIGAR_LOG_DEBUG,
+          "initializing perfbuf to %u bytes", sigar->perfbuf_size);
     }
 
     return sigar->perfbuf_size;
@@ -163,6 +165,10 @@ static DWORD perfbuf_grow(sigar_t *sigar)
 {
     sigar->perfbuf_size += PERFBUF_SIZE;
 
+    sigar_log (sigar, SIGAR_LOG_DEBUG,
+        "growing perfbuf to %u bytes", sigar->perfbuf_size);
+
+    /* XXX if this allocation fails, bad things will happen */
     sigar->perfbuf =
         realloc(sigar->perfbuf, sigar->perfbuf_size);
 
