@@ -30,6 +30,8 @@
 #include <iphlpapi.h>
 #endif
 
+#define SIGAR_SAFE_FREE(s) if ((s) != NULL) free(s)
+
 #define USING_WIDE_S(s) (s)->using_wide
 #define USING_WIDE()    USING_WIDE_S(sigar)
 
@@ -493,7 +495,7 @@ static int sigar_dllmod_init(sigar_t *sigar,
         return ENOMEM;
     }
     module->handle = LoadLibrary(modname);
-    free(modname);
+    SIGAR_SAFE_FREE(modname);
     if (!(success = (module->handle ? TRUE : FALSE))) {
         rc = GetLastError();
         /* dont try again */
@@ -1684,7 +1686,7 @@ static int sigar_local_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 
     sigar_proc_env_parse(temp_env, procenv, TRUE);
 
-    free(temp_env);
+    SIGAR_SAFE_FREE(temp_env);
     FreeEnvironmentStrings(env);
 
     return SIGAR_OK;
@@ -1742,7 +1744,7 @@ SIGAR_DECLARE(int) sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
             retval = 
                 GetEnvironmentVariable(temp_key, value, sizeof(value));
 
-            free(temp_key);
+            SIGAR_SAFE_FREE(temp_key);
 
             if (retval == 0) {
                 if (GetLastError() == ERROR_ENVVAR_NOT_FOUND) {
@@ -1762,6 +1764,9 @@ SIGAR_DECLARE(int) sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
             procenv->env_getter(procenv->data,
                                 procenv->key, procenv->klen,
                                 temp_value, retval);
+
+            SIGAR_SAFE_FREE (temp_value);
+
             return SIGAR_OK;
         }
         else {
@@ -1882,7 +1887,7 @@ SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
         status = procmods->module_getter(procmods->data,
                                          temp_name, strlen(temp_name));
 
-        free(temp_name);
+        SIGAR_SAFE_FREE(temp_name);
 
         if (status != SIGAR_OK) {
             /* not an error; just stop iterating */
@@ -2037,7 +2042,7 @@ SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(fsp->dir_name, temp);
         SIGAR_SSTRCPY(fsp->dev_name, temp);
 
-        free(temp);
+        SIGAR_SAFE_FREE(temp);
 
         if ((drive_type == DRIVE_REMOTE) && sigar_WNetGetConnection) {
             TCHAR temp_drive[4096];
@@ -2247,7 +2252,7 @@ sigar_file_system_usage_get(sigar_t *sigar,
     retval = GetDiskFreeSpaceEx(tcstr_dirname,
                                 &avail, &total, &free_u);
 
-    free(tcstr_dirname);
+    SIGAR_SAFE_FREE(tcstr_dirname);
 
     /* restore previous error mode */
     SetErrorMode(errmode);
@@ -3653,10 +3658,11 @@ static int get_logon_info(HKEY users,
     if (status == ERROR_SUCCESS) {
         if ((value[0] != _T('\0')) && _tcscmp(value, _T("Console")) == 0) {
             if (!sigar_tcstr2cstr(value, &cvalue)) {
+                RegCloseKey (key);
                 return ENOMEM;
             }
             SIGAR_SSTRCPY(who->host, cvalue);
-            free(cvalue);
+            SIGAR_SAFE_FREE(cvalue);
         }
     }
 
@@ -3665,10 +3671,11 @@ static int get_logon_info(HKEY users,
                              NULL, &type, (LPBYTE)value, &size);
     if (status == ERROR_SUCCESS) {
         if (!sigar_tcstr2cstr(value, &cvalue)) {
+            RegCloseKey (key);
             return ENOMEM;
         }
         SIGAR_SSTRCPY(who->device, cvalue);
-        free(cvalue);
+        SIGAR_SAFE_FREE(cvalue);
     }
 
     RegCloseKey(key);
@@ -3735,10 +3742,14 @@ static int sigar_who_registry(sigar_t *sigar,
             who = &wholist->data[wholist->number++];
             
             if (!sigar_tcstr2cstr(username, &temp_username)) {
+                LocalFree(sid);
+                RegCloseKey(users);
                 return ERROR_NOT_ENOUGH_MEMORY;
             }
 
             if (!sigar_tcstr2cstr(domain, &temp_domain)) {
+                LocalFree(sid);
+                RegCloseKey(users);
                 free(temp_username);
                 return ERROR_NOT_ENOUGH_MEMORY;
             }
@@ -3747,8 +3758,8 @@ static int sigar_who_registry(sigar_t *sigar,
             SIGAR_SSTRCPY(who->host, temp_domain);
             SIGAR_SSTRCPY(who->device, "console");
 
-            free(temp_username);
-            free(temp_domain);
+            SIGAR_SAFE_FREE(temp_username);
+            SIGAR_SAFE_FREE(temp_domain);
 
             get_logon_info(users, subkey, who);
         }               
@@ -3831,7 +3842,7 @@ static int sigar_who_wts(sigar_t *sigar,
 
         SIGAR_SSTRCPY(who->device, temp_station_name);
         
-        free(temp_station_name);
+        SIGAR_SAFE_FREE(temp_station_name);
 
         buffer = NULL;
         bytes = 0;
@@ -3870,7 +3881,7 @@ static int sigar_who_wts(sigar_t *sigar,
             }
             else {
                 SIGAR_SSTRCPY(who->user, temp_buffer);
-                free(temp_buffer);
+                SIGAR_SAFE_FREE(temp_buffer);
             }
             sigar_WTSFreeMemory(buffer);
         }
@@ -4041,12 +4052,12 @@ int sigar_service_pid_get(sigar_t *sigar, char *name, sigar_pid_t *pid)
     }
 
     if (!(svc = OpenService(mgr, temp_name, SERVICE_ALL_ACCESS))) {
-        free(temp_name);
+        SIGAR_SAFE_FREE(temp_name);
         CloseServiceHandle(mgr);
         return GetLastError();
     }
 
-    free(temp_name);
+    SIGAR_SAFE_FREE(temp_name);
 
     if (sigar_QueryServiceStatusEx(svc,
                                    SC_STATUS_PROCESS_INFO,
@@ -4185,14 +4196,19 @@ int sigar_file_version_get(sigar_file_version_t *version,
     }
 
     if (!(len = GetFileVersionInfoSize(temp_name, &handle))) {
-        free(temp_name);
+        SIGAR_SAFE_FREE(temp_name);
         return GetLastError();
     }
 
     if (len == 0) {
+        SIGAR_SAFE_FREE(temp_name);
         return !SIGAR_OK;
     }
     data = (LPTSTR)malloc(len);
+    if (data == NULL) {
+        SIGAR_SAFE_FREE(temp_name);
+        return ENOMEM;
+    }
  
     if (GetFileVersionInfo(temp_name, handle, len, data)) {
         if (VerQueryValue(data, _T("\\"), &info, &len)) {
@@ -4214,7 +4230,7 @@ int sigar_file_version_get(sigar_file_version_t *version,
         status = GetLastError();
     }
 
-    free(temp_name);
+    SIGAR_SAFE_FREE(temp_name);
 
     if (infocb && (status == SIGAR_OK)) {
         struct {
