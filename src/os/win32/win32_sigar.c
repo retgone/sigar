@@ -2358,19 +2358,25 @@ SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
     sigar_cpu_info_t info;
     int core_rollup = sigar_cpu_core_rollup(sigar);
 
-    sigar_cpu_info_list_create(cpu_infos);
-
-    status = sigar_cpu_info_get(sigar, &info);
-
+    status = sigar_cpu_info_list_create(cpu_infos);
     if (status != SIGAR_OK) {
         return status;
     }
 
-    for (i=0; i<sigar->ncpu; i++) {
-        SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
+    status = sigar_cpu_info_get(sigar, &info);
 
+    if (status != SIGAR_OK) {
+        sigar_cpu_info_list_destroy(cpu_infos);
+        return status;
+    }
+
+    for (i=0; i<sigar->ncpu; i++) {
         if (core_rollup && (i % sigar->lcpu)) {
             continue; /* fold logical processors */
+        }
+
+        if (cpu_infos->number == cpu_infos->size) {
+            SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
         }
 
         memcpy(&cpu_infos->data[cpu_infos->number++],
