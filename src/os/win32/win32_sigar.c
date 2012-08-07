@@ -2375,9 +2375,7 @@ SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
             continue; /* fold logical processors */
         }
 
-        if (cpu_infos->number == cpu_infos->size) {
-            SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
-        }
+        SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
 
         memcpy(&cpu_infos->data[cpu_infos->number++],
                &info, sizeof(info));
