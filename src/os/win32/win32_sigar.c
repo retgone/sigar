@@ -2252,6 +2252,7 @@ sigar_file_system_usage_get(sigar_t *sigar,
     UINT errmode = SetErrorMode(SEM_FAILCRITICALERRORS);
 
     if (!sigar_cstr2tcstr(dirname, &tcstr_dirname)) {
+        SetErrorMode(errmode);
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
