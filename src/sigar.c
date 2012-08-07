@@ -658,7 +658,9 @@ sigar_net_interface_list_destroy(sigar_t *sigar,
 
     if (iflist->size) {
         for (i=0; i<iflist->number; i++) {
-            free(iflist->data[i]);
+            if (iflist->data[i] != NULL) {
+                free(iflist->data[i]);
+            }
         }
         free(iflist->data);
         iflist->number = iflist->size = 0;

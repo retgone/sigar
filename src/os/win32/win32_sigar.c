@@ -2944,6 +2944,9 @@ sigar_net_interface_list_get(sigar_t *sigar,
         iflist->size = ift->dwNumEntries;
         iflist->data =
             (char **)malloc(sizeof(*(iflist->data)) * iflist->size);
+        if (iflist->data != NULL) {
+            memset (iflist->data, 0, sizeof(*(iflist->data)) * iflist->size);
+        }
     }
 
     for (i=0; i<ift->dwNumEntries; i++) {
