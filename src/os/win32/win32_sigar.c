@@ -2366,7 +2366,7 @@ SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
     status = sigar_cpu_info_get(sigar, &info);
 
     if (status != SIGAR_OK) {
-        sigar_cpu_info_list_destroy(cpu_infos);
+        sigar_cpu_info_list_destroy(sigar, cpu_infos);
         return status;
     }
 
