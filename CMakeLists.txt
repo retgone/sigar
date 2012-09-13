@@ -1,4 +1,4 @@
-PROJECT(sigar C)
+PROJECT(sigar C CXX)
 
 cmake_minimum_required(VERSION 2.6)
 

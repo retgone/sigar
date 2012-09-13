@@ -658,7 +658,9 @@ sigar_net_interface_list_destroy(sigar_t *sigar,
 
     if (iflist->size) {
         for (i=0; i<iflist->number; i++) {
-            free(iflist->data[i]);
+            if (iflist->data[i] != NULL) {
+                free(iflist->data[i]);
+            }
         }
         free(iflist->data);
         iflist->number = iflist->size = 0;
@@ -1504,7 +1506,7 @@ static void hwaddr_aix_lookup(sigar_t *sigar, sigar_net_interface_config_t *ifco
     sigar_hwaddr_set_null(ifconfig);
 }
 
-#elif !defined(SIOCGIFHWADDR)
+#elif !defined(SIOCGIFHWADDR) || defined(__sun__)
 
 #include <net/if_arp.h>
 
@@ -1715,7 +1717,7 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
                                   ifr_s_addr(ifr));
         }
 
-#if defined(SIOCGIFHWADDR)
+#if defined(SIOCGIFHWADDR) && !defined(__sun__)
         if (!ioctl(sock, SIOCGIFHWADDR, &ifr)) {
             get_interface_type(ifconfig,
                                ifr.ifr_hwaddr.sa_family);

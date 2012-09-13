@@ -1,14 +1,14 @@
 dnl ... hmm ... we have to duplicate the data below again
-AC_INIT(libsigar, 1.6.2)
+AC_INIT(libsigar, 1.6.5)
 AC_CONFIG_SRCDIR(src/sigar.c)
 dnl AC_CONFIG_HEADERS(src/config.h)
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([1.9 foreign])
 AC_CANONICAL_HOST
 
 dnl for sigar_version_autoconf.c.in
 VERSION_MAJOR=1
 VERSION_MINOR=6
-VERSION_MAINT=2
+VERSION_MAINT=5
 VERSION_BUILD=0
 
 AC_SUBST(VERSION_MAJOR)
@@ -20,7 +20,8 @@ AC_PROG_CC
 AC_PROG_LN_S
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
-AC_PROG_LIBTOOL
+AC_PROG_LIBTOOL([disable-shared static])
+PKG_PROG_PKG_CONFIG
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_MSG_CHECKING([for os type ($host_os)])
@@ -66,7 +67,7 @@ case $host_os in
      AC_DEFINE(SOLARIS,[],[running on Solaris])
      SRC_OS="solaris"
      AC_DEFINE(SIGAR_TEST_OS_SOLARIS, [1], [for the tests])
-     SIGAR_LIBS="-lkstat -lsocket"
+     SIGAR_LIBS="-lkstat -lsocket -lnsl"
      ;;
      *)
      ac_system="unknown"
