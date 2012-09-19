@@ -2287,6 +2287,9 @@ SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
             PERF_VAL(temp, PERF_IX_DISK_WRITE_TIME_NUMERATOR);
             disk->wtime  = NS100_2MSEC(temp);
 
+            PERF_VAL(temp, PERF_IX_DISK_TIME_DENOMINATOR);
+            disk->snaptime = NS100_2MSEC(temp);
+
             PERF_VAL(disk->reads, PERF_IX_DISK_READ);
             PERF_VAL(disk->writes, PERF_IX_DISK_WRITE);
             PERF_VAL(disk->read_bytes, PERF_IX_DISK_READ_BYTES);
